@@ -152,7 +152,7 @@ while ($record2 = mysqli_fetch_array($query2)) {
                                         <td class="fw-bold text-primary"><?php echo $row['id_order'] ?></td>
                                         <td><?php echo $row['pelanggan'] ?></td>
                                         <td><?php echo $row['meja'] ?></td>
-                                        <td class="text-end"><?php echo number_format($row['diskon'], 0, ',', '.') ?></td>
+                                        <td class="text-end"><?php echo number_format($row['diskon'] ?? 0, 0, ',', '.') ?></td>
                                         <td class="text-end fw-bold text-success"><?php echo number_format($total_bayar_akhir, 0, ',', '.') ?></td>
                                         <td><?php echo $row['username'] ?></td>
                                         <td class="text-center">
