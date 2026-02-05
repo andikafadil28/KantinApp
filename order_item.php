@@ -1,7 +1,7 @@
 <?php
 include "Database/connect.php";
 
-$query = mysqli_query($conn, "SELECT *, SUM((harga+pajak)*jumlah) AS harganya,harga+pajak AS harga_jual,sum(harga*jumlah) AS harganya_toko from tb_list_order
+$query = mysqli_query($conn, "SELECT *, SUM(((harga+pajak)+((harga+pajak)*0.11))*jumlah) AS harganya,((harga+pajak)+((harga+pajak)*0.11)) AS harga_jual,sum(harga*jumlah) AS harganya_toko from tb_list_order
 LEFT JOIN tb_order ON tb_order.id_order = tb_list_order.kode_order
 LEFT JOIN tb_menu ON tb_menu.id = tb_list_order.menu
 LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_list_order.kode_order
@@ -171,13 +171,13 @@ while ($record2 = mysqli_fetch_array($query2)) {
                                                 </div>
                                             </form>
                                             <div>Diskon: -<?php echo number_format($diskon_nominal + $diskon, 0, ',', '.'); ?></div>
-                                            <div>Total Harga: <?php echo number_format($grand_total - $diskon, 0, ',', '.'); ?> </div>
+                                            <!-- <div>Total Harga: <?php echo number_format($grand_total - $diskon, 0, ',', '.'); ?> </div> -->
                                             <?php
                                             $grand_total = $grand_total - $diskon;
-                                            $ppn = $grand_total * 0.11;
-                                            $grand_total += $ppn;
+                                            // $ppn = $grand_total * 0.11;
+                                            // $grand_total += $ppn;
                                             ?>
-                                            <div>PPN 11%: <?php echo number_format($ppn, 0, ',', '.'); ?></div>
+                                            <!-- <div>PPN 11%: <?php echo number_format($ppn, 0, ',', '.'); ?></div> -->
                                             <div class="fw-bold">Grand Total: <?php echo number_format($grand_total, 0, ',', '.'); ?></div>
 
                                         </td>
@@ -340,13 +340,16 @@ while ($record2 = mysqli_fetch_array($query2)) {
         <div class="text-right">
             <div>Diskon: -<?php echo number_format($diskon_nominal + $diskon, 0, ',', '.'); ?></div>
             <div>Total: <?php echo number_format($total - $diskon, 0, ',', '.'); ?></div>
-            <div>PPN : <?php echo number_format($ppn, 0, ',', '.'); ?> </div>
+            <!-- <div>PPN : <?php echo number_format($ppn, 0, ',', '.'); ?> </div> -->
             
             <h3 class="grand-total-line">
                 Grand Total: <?php echo number_format($grand_total, 0, ',', '.'); ?>
             </h3>
+            
         </div>
-        
+        <div class="text-center small-detail" style="margin-top: 10px;font-weight: bold;">
+            *Harga Sudah Termasuk Pajak
+        </div>
         <div class="text-center small-detail" style="margin-top: 10px;font-weight: bold;">
             TERIMA KASIH ATAS KUNJUNGAN ANDA!
         </div>
