@@ -1,7 +1,7 @@
 <?php
 include "Database/connect.php";
 
-$query = mysqli_query($conn, "SELECT *, SUM(((harga+pajak)+((harga+pajak)*0.11))*jumlah) AS harganya,((harga+pajak)+((harga+pajak)*0.11)) AS harga_jual,sum(harga*jumlah) AS harganya_toko from tb_list_order
+$query = mysqli_query($conn, "SELECT *, SUM((harga+pajak)*0.11) as ppn_pajak, SUM(((harga+pajak)+((harga+pajak)*0.11))*jumlah) AS harganya,((harga+pajak)+((harga+pajak)*0.11)) AS harga_jual,sum(harga*jumlah) AS harganya_toko from tb_list_order
 LEFT JOIN tb_order ON tb_order.id_order = tb_list_order.kode_order
 LEFT JOIN tb_menu ON tb_menu.id = tb_list_order.menu
 LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_list_order.kode_order

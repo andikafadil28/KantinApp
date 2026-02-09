@@ -259,9 +259,11 @@ if (empty($result)) {
                                                             <?php
                                                             $total = 0;
                                                             $total2 = 0;
+                                                            $total3 = 0;
                                                             foreach ($result as $row) {
                                                                   $total += $row['harganya'];
                                                                   $total2 += $row['harganya_toko'];
+                                                                  $total3 += $row['ppn_pajak'];
                                                             }
                                                             echo number_format($total, 0, ',', '.');
                                                             ?>
@@ -293,8 +295,8 @@ if (empty($result)) {
                                                             </div>
                                                             <?php
                                                             $grand_total = $grand_total - $diskon;
-                                                            $ppn = $grand_total * 0.11;
-                                                            $grand_total += $ppn;
+                                                            $ppn = $total3;
+                                                            // $grand_total += $ppn;
                                                             ?>
                                                             <div>PPN 11%: <?php echo number_format($ppn, 0, ',', '.'); ?>
                                                             </div>
