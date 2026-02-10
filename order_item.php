@@ -1,7 +1,7 @@
 <?php
 include "Database/connect.php";
 
-$query = mysqli_query($conn, "SELECT *, SUM((harga+pajak)*0.11) as ppn_pajak, SUM(((harga+pajak)+((harga+pajak)*0.11))*jumlah) AS harganya,((harga+pajak)+((harga+pajak)*0.11)) AS harga_jual,sum(harga*jumlah) AS harganya_toko from tb_list_order
+$query = mysqli_query($conn, "SELECT *, SUM(((harga+pajak)*0.11)*jumlah) as ppn_pajak, SUM(((harga+pajak)+((harga+pajak)*0.11))*jumlah) AS harganya,((harga+pajak)+((harga+pajak)*0.11)) AS harga_jual,sum(harga*jumlah) AS harganya_toko from tb_list_order
 LEFT JOIN tb_order ON tb_order.id_order = tb_list_order.kode_order
 LEFT JOIN tb_menu ON tb_menu.id = tb_list_order.menu
 LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_list_order.kode_order
@@ -145,9 +145,9 @@ while ($record2 = mysqli_fetch_array($query2)) {
                                             echo number_format($total, 0, ',', '.');
                                             ?>
                                         </td>
-                                        
+
                                     </tr>
-                        
+
                                     <tr>
                                         <td colspan="4" class="fw-bold">
                                             Grand Total
@@ -161,8 +161,8 @@ while ($record2 = mysqli_fetch_array($query2)) {
 
 
                                             $grand_total = $total - $diskon_nominal;
-                                            
-                                            
+
+
                                             ?>
                                             <form method="post" action="">
                                                 <div class="mb-2">
@@ -225,137 +225,146 @@ while ($record2 = mysqli_fetch_array($query2)) {
 
     <div id="strukContent" style="display: none;">
 
-    <style>
-        /* --- CSS STYLING UNTUK STRUK KASIR (60MM) - FONT TEBAL --- */
-        #struk_body {
-            width: 60mm;
-            font-family: 'Courier New', monospace; 
-            text-align: left;
-            font-size: 12px; 
-            padding: 5px; 
-            /* PENTING: Membuat semua teks di body menjadi tebal secara default */
-            font-weight: bold; 
-        }
+        <style>
+            /* --- CSS STYLING UNTUK STRUK KASIR (60MM) - FONT TEBAL --- */
+            #struk_body {
+                width: 60mm;
+                font-family: 'Courier New', monospace;
+                text-align: left;
+                font-size: 12px;
+                padding: 5px;
+                /* PENTING: Membuat semua teks di body menjadi tebal secara default */
+                font-weight: bold;
+            }
 
-        #struk_body h2 {
-            text-align: center;
-            margin: 5px 0;
-            /* Judul lebih besar dan tebal */
-            font-size: 16px;
-            font-weight: 900; /* Atau bolder */
-        }
+            #struk_body h2 {
+                text-align: center;
+                margin: 5px 0;
+                /* Judul lebih besar dan tebal */
+                font-size: 16px;
+                font-weight: 900;
+                /* Atau bolder */
+            }
 
-        #struk_body table {
-            width: 100%; 
-            font-size: 12px;
-            text-align: left;
-            margin: 5px 0;
-            border-collapse: collapse;
-        }
+            #struk_body table {
+                width: 100%;
+                font-size: 12px;
+                text-align: left;
+                margin: 5px 0;
+                border-collapse: collapse;
+            }
 
-        #struk_body table th,
-        #struk_body table td {
-            border: none; 
-            padding: 1px 0; 
-            vertical-align: top;
-            font-weight: bold;
-        }
+            #struk_body table th,
+            #struk_body table td {
+                border: none;
+                padding: 1px 0;
+                vertical-align: top;
+                font-weight: bold;
+            }
 
-        /* Utility classes untuk perataan teks */
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        
-        /* Garis pemisah */
-        .separator {
-            border-top: 1px dashed black; 
-            margin: 3px 0;
-        }
-        .grand-total-line {
-            border-top: 2px solid black; 
-            padding-top: 5px;
-            margin-top: 5px;
-        }
-        /* Style untuk detail kecil (harga satuan, catatan) - dibuat tidak tebal agar ada kontras */
-        .small-detail {
-            font-size: 10px;
-            font-style: italic;
-            font-weight: normal; /* Override bold agar tidak terlalu ramai */
-        }
-    </style>
+            /* Utility classes untuk perataan teks */
+            .text-center {
+                text-align: center;
+            }
 
-    <div id="struk_body" class="container">
-        <h2 class="text-center">Kantin Sakina</h2>
-        <h2 class="text-center">Struk Pembayaran</h2>
-        
-        <div class="separator"></div>
+            .text-right {
+                text-align: right;
+            }
 
-        <div>Waktu Order: <?php echo $waktu_order ?></div>
-        <div>Kode Order: <?php echo $kode; ?></div>
-        <div>Meja: <?php echo $meja; ?> / Pelanggan: <?php echo $customer; ?></div>
-        <div>Kios: <?php echo $toko; ?></div>
-        
-        <div class="separator"></div>
+            /* Garis pemisah */
+            .separator {
+                border-top: 1px dashed black;
+                margin: 3px 0;
+            }
 
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 55%;">Menu</th>
-                    <th class="text-center" style="width: 10%;">Qty</th>
-                    <th class="text-right" style="width: 35%;">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                foreach ($result as $row) {
-                    $harga_unit = number_format($row['harga_jual'], 0, ',', '.');
-                    $total_item = number_format($row['harganya'], 0, ',', '.');
-                ?>
-                <tr>
-                    <td colspan="1">
-                        <?php echo $row['nama']; ?>
-                    </td>
-                    <td class="text-center">
-                        <?php echo $row['jumlah']; ?>
-                    </td>
-                    <td class="text-right">
-                        <?php echo $total_item; ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="small-detail">
-                        @ <?php echo $harga_unit; ?>
-                    </td>
-                    <td colspan="2" class="small-detail">
-                        <?php echo (!empty($row['catatan_order']) ? 'Catatan: ' . $row['catatan_order'] : ''); ?>
-                    </td>
-                </tr>
-                <?php
-                }
-                ?>
-            </tbody>
-        </table>
+            .grand-total-line {
+                border-top: 2px solid black;
+                padding-top: 5px;
+                margin-top: 5px;
+            }
 
-        <div class="separator"></div>
+            /* Style untuk detail kecil (harga satuan, catatan) - dibuat tidak tebal agar ada kontras */
+            .small-detail {
+                font-size: 10px;
+                font-style: italic;
+                font-weight: normal;
+                /* Override bold agar tidak terlalu ramai */
+            }
+        </style>
 
-        <div class="text-right">
-            <div>Diskon: -<?php echo number_format($diskon_nominal + $diskon, 0, ',', '.'); ?></div>
-            <div>Total: <?php echo number_format($total - $diskon, 0, ',', '.'); ?></div>
-            <!-- <div>PPN : <?php echo number_format($ppn, 0, ',', '.'); ?> </div> -->
-            
-            <h3 class="grand-total-line">
-                Grand Total: <?php echo number_format($grand_total, 0, ',', '.'); ?>
-            </h3>
-            
+        <div id="struk_body" class="container">
+            <h2 class="text-center">Kantin Sakina</h2>
+            <h2 class="text-center">Struk Pembayaran</h2>
+
+            <div class="separator"></div>
+
+            <div>Waktu Order: <?php echo $waktu_order ?></div>
+            <div>Kode Order: <?php echo $kode; ?></div>
+            <div>Meja: <?php echo $meja; ?> / Pelanggan: <?php echo $customer; ?></div>
+            <div>Kios: <?php echo $toko; ?></div>
+
+            <div class="separator"></div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 55%;">Menu</th>
+                        <th class="text-center" style="width: 10%;">Qty</th>
+                        <th class="text-right" style="width: 35%;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    foreach ($result as $row) {
+                        $harga_unit = number_format($row['harga_jual'], 0, ',', '.');
+                        $total_item = number_format($row['harganya'], 0, ',', '.');
+                    ?>
+                        <tr>
+                            <td colspan="1">
+                                <?php echo $row['nama']; ?>
+                            </td>
+                            <td class="text-center">
+                                <?php echo $row['jumlah']; ?>
+                            </td>
+                            <td class="text-right">
+                                <?php echo $total_item; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="small-detail">
+                                @ <?php echo $harga_unit; ?>
+                            </td>
+                            <td colspan="2" class="small-detail">
+                                <?php echo (!empty($row['catatan_order']) ? 'Catatan: ' . $row['catatan_order'] : ''); ?>
+                            </td>
+                        </tr>
+                    <?php
+                    }
+                    ?>
+                </tbody>
+            </table>
+
+            <div class="separator"></div>
+
+            <div class="text-right">
+                <div>Diskon: -<?php echo number_format($diskon_nominal + $diskon, 0, ',', '.'); ?></div>
+                <div>Total: <?php echo number_format($total - $diskon, 0, ',', '.'); ?></div>
+                <!-- <div>PPN : <?php echo number_format($ppn, 0, ',', '.'); ?> </div> -->
+
+                <h3 class="grand-total-line">
+                    Grand Total: <?php echo number_format($grand_total, 0, ',', '.'); ?>
+                </h3>
+
+            </div>
+            <div class="text-center small-detail" style="margin-top: 10px;font-weight: bold;">
+                *Harga Sudah Termasuk Pajak
+            </div>
+            <div class="text-center small-detail" style="margin-top: 10px;font-weight: bold;">
+                TERIMA KASIH ATAS KUNJUNGAN ANDA!
+            </div>
+
         </div>
-        <div class="text-center small-detail" style="margin-top: 10px;font-weight: bold;">
-            *Harga Sudah Termasuk Pajak
-        </div>
-        <div class="text-center small-detail" style="margin-top: 10px;font-weight: bold;">
-            TERIMA KASIH ATAS KUNJUNGAN ANDA!
-        </div>
-
     </div>
-</div>
 
 
 
@@ -373,7 +382,7 @@ while ($record2 = mysqli_fetch_array($query2)) {
         $(document).ready(function() {
             $('#menu-pilihan').select2({
                 // Opsi untuk placeholder, akan muncul di kotak pencarian
-                placeholder: 'Ketik nama menu...', 
+                placeholder: 'Ketik nama menu...',
                 allowClear: true // Memungkinkan pengguna untuk menghapus pilihan
             });
         });
