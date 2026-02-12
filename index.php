@@ -40,11 +40,14 @@ if (isset($_GET['x']) && $_GET['x'] == 'home') {
 } elseif (isset($_GET['x']) && $_GET['x'] == 'laporantoko') {
     $page = 'laporan_toko.php';
     include "main.php";
-}elseif (isset($_GET['x']) && $_GET['x'] == 'rekapmenurs') {
+} elseif (isset($_GET['x']) && $_GET['x'] == 'rekapmenurs') {
     $page = 'rekapmenurs.php';
     include "main.php";
-}elseif (isset($_GET['x']) && $_GET['x'] == 'rekaprs') {
+} elseif (isset($_GET['x']) && $_GET['x'] == 'rekaprs') {
     $page = 'rekaprs.php';
+    include "main.php";
+} elseif (isset($_GET['x']) && $_GET['x'] == 'rekapkeuangan') {
+    $page = 'laporan_keuangan.php';
     include "main.php";
 } elseif (isset($_GET['x']) && $_GET['x'] == 'login') {
     include "login.php";
@@ -53,4 +56,3 @@ if (isset($_GET['x']) && $_GET['x'] == 'home') {
 } else {
     include "main.php";
 }
-?>

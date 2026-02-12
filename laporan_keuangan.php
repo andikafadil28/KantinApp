@@ -1,3 +1,29 @@
+<style>
+    #table_laporan {
+        width: 100% !important;
+        table-layout: fixed;
+        font-size: 12px;
+    }
+
+    #table_laporan th,
+    #table_laporan td {
+        white-space: normal !important;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        padding: 6px;
+        vertical-align: middle;
+    }
+
+    .dataTables_wrapper {
+        overflow-x: hidden !important;
+    }
+
+    .table-responsive {
+        overflow-x: hidden !important;
+    }
+</style>
+
+
 <?php
 include "Database/connect.php";
 date_default_timezone_set("Asia/Jakarta");
@@ -48,24 +74,10 @@ if (isset($_POST['filter'])) {
     }
 
     // Tentukan query string dengan klausa WHERE yang baru dibuat
-    $query_string = "SELECT 
-                        tb_order.*, 
-                        tb_bayar.id_bayar, tb_bayar.jumlah_bayar, tb_bayar.diskon, tb_bayar.nominal_toko, tb_bayar.nominal_rs 
-                     FROM tb_order
-                     LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_order.id_order
-                     -- LEFT JOIN tb_list_order ON tb_list_order.kode_order = tb_order.id_order -- Tidak diperlukan jika hanya mengambil data order & bayar
-                     $where_clause
-                     GROUP BY tb_order.id_order 
-                     ORDER BY tb_order.waktu_order DESC";
+    include "Database/Query/Rekap_keuangan_detail_where.php";
 } else {
     // Query default (Semua data, disarankan ditambahi limit tanggal jika data sangat banyak)
-    $query_string = "SELECT 
-                        tb_order.*, 
-                        tb_bayar.id_bayar, tb_bayar.jumlah_bayar, tb_bayar.diskon, tb_bayar.nominal_toko, tb_bayar.nominal_rs 
-                     FROM tb_order
-                     LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_order.id_order
-                     GROUP BY tb_order.id_order 
-                     ORDER BY tb_order.waktu_order DESC";
+    include "Database/Query/Rekap_keuangan_detail_query.php";
 }
 
 // Jalankan query utama
@@ -148,51 +160,55 @@ while ($record = mysqli_fetch_array($query, MYSQLI_ASSOC)) {
                     echo "<p class='alert alert-info'>$info_filter</p>";
                     ?>
 
-                    <table class="table table-hover" id="table_laporan">
-                        <thead>
-                            <tr>
-                                <th scope="col">No</th>
-                                <th scope="col">Kode Order</th>
-                                <th scope="col">Pelanggan</th>
-                                <th scope="col">Meja</th>
-                                <th scope="col">Pendapatan Toko</th>
-                                <th scope="col">Pendapatan Sakina Food Court</th>
-                                <th scope="col">Total Bayar</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Diskon</th>
-                                <th scope="col">Waktu Order</th>
-                                <th scope="col">Nama Toko</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $id_nomor = 1;
-                            foreach ($result as $row) {
-                                $is_paid = !empty($row['id_bayar']);
-                                $status_badge = $is_paid ? "<span class='badge text-bg-success'>Dibayar</span>" : "<span class='badge text-bg-danger'>Belum Dibayar</span>";
-                            ?>
+                    <div>
+                        <table class="table table-hover table-bordered w-100" id="table_laporan">
+                            <thead class="table-light">
                                 <tr>
-                                    <th scope="row"><?php echo $id_nomor++ ?></th>
-                                    <td><?php echo htmlspecialchars($row['id_order'] ?? '-') ?></td>
-                                    <td><?php echo htmlspecialchars($row['pelanggan'] ?? '-') ?></td>
-                                    <td><?php echo htmlspecialchars($row['meja'] ?? '-') ?></td>
-                                    <td><?php echo number_format($row['nominal_toko'] ?? 0, 0, ',', '.') ?></td>
-                                    <td><?php echo number_format($row['nominal_rs'] ?? 0, 0, ',', '.') ?></td>
-                                    <td><?php echo number_format($row['jumlah_bayar'] ?? 0, 0, ',', '.') ?></td>
-                                    <td><?php echo $status_badge ?></td>
-                                    <td><?php echo number_format($row['diskon'] ?? 0, 0, ',', '.') ?></td>
-                                    <td><?php echo htmlspecialchars($row['waktu_order'] ?? '-') ?></td>
-                                    <td><?php echo htmlspecialchars($row['nama_kios'] ?? '-') ?></td>
+                                    <th>No</th>
+                                    <th>Waktu Order</th>
+                                    <th>Nama Menu</th>
+                                    <th>Jumlah</th>
+                                    <th>Nama Toko</th>
+                                    <th>Harga Jual</th>
+                                    <th>PPN</th>
+                                    <th>Harga Pembeli</th>
+                                    <th>Total Menu</th>
+                                    <th>Total PPN</th>
+                                    <th>Total Pembeli</th>
+                                    <th>Untung Toko</th>
+                                    <th>Untung RS</th>
+                                    <th>Untung RS + Pajak</th>
                                 </tr>
-                            <?php
-                            }
-                            ?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $id_nomor = 1;
+                                foreach ($result as $row) {
+                                ?>
+                                    <tr>
+                                        <td><?php echo $id_nomor++ ?></td>
+                                        <td><?php echo htmlspecialchars($row['Waktu_Order'] ?? '-') ?></td>
+                                        <td><?php echo htmlspecialchars($row['Nama_Menu'] ?? '-') ?></td>
+                                        <td><?php echo number_format($row['Jumlah_Terjual'] ?? 0, 0, ',', '.') ?></td>
+                                        <td><?php echo htmlspecialchars($row['Nama_Toko'] ?? '-') ?></td>
+                                        <td><?php echo number_format($row['Harga_Jual_Per_Menu'] ?? 0, 0, ',', '.') ?></td>
+                                        <td><?php echo number_format($row['Harga_PPN'] ?? 0, 0, ',', '.') ?></td>
+                                        <td><?php echo number_format($row['Harga_Pembeli_Per_Menu'] ?? 0, 0, ',', '.') ?></td>
+                                        <td><?php echo number_format($row['Harga_Total_Per_Menu'] ?? 0, 0, ',', '.') ?></td>
+                                        <td><?php echo number_format($row['Harga_Total_PPN'] ?? 0, 0, ',', '.') ?></td>
+                                        <td><?php echo number_format($row['Harga_Pembeli_Total'] ?? 0, 0, ',', '.') ?></td>
+                                        <td><?php echo number_format($row['Keuntungan_Toko'] ?? 0, 0, ',', '.') ?></td>
+                                        <td><?php echo number_format($row['Keuntungan_RS'] ?? 0, 0, ',', '.') ?></td>
+                                        <td><?php echo number_format($row['Keuntungan_RS_Pajak'] ?? 0, 0, ',', '.') ?></td>
+                                    </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
 
                     <hr>
 
-                    <table class="table table-striped table-bordered w-50">
+                    <!-- <table class="table table-striped table-bordered w-50">
                         <thead>
                             <tr class="table-primary">
                                 <th colspan="2" class="text-center">REKAPITULASI TOTAL</th>
@@ -228,9 +244,9 @@ while ($record = mysqli_fetch_array($query, MYSQLI_ASSOC)) {
                                 <td class="fw-bolder text-end">Rp <?php echo number_format($grand_total, 0, ',', '.') ?></td>
                             </tr>
                         </tbody>
-                    </table>
+                    </table> -->
                     <div class="mb-3">
-                        <form method="POST" action="excel_export/export_excel.php" target="_blank">
+                        <form method="POST" action="excel_export/export_excel_keuangan.php" target="_blank">
                             <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($start_date); ?>">
                             <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($end_date); ?>">
                             <input type="hidden" name="kios_filter" value="<?php echo htmlspecialchars($kios_filter); ?>">
@@ -244,10 +260,22 @@ while ($record = mysqli_fetch_array($query, MYSQLI_ASSOC)) {
         </div>
     </div>
     <script>
-        // Memastikan DataTables diinisialisasi setelah elemen table tersedia
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof DataTable !== 'undefined') {
-                let table = new DataTable('#table_laporan');
+                new DataTable('#table_laporan', {
+                    scrollX: false,
+                    autoWidth: false,
+                    responsive: true,
+                    columnDefs: [{
+                            width: "120px",
+                            targets: 1
+                        },
+                        {
+                            width: "120px",
+                            targets: 2
+                        }
+                    ]
+                });
             }
         });
     </script>

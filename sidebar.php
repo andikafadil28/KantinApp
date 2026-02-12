@@ -2,9 +2,9 @@
 
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="home">
         <div class="sidebar-brand-icon">
-            <i class="bi bi-shop"></i> 
+            <i class="bi bi-shop"></i>
         </div>
-        <div class="sidebar-brand-text mx-2">Sakina Kantin</div> 
+        <div class="sidebar-brand-text mx-2">Sakina Kantin</div>
     </a>
 
     <hr class="sidebar-divider my-0">
@@ -45,6 +45,7 @@
                 <a class="collapse-item" href="history">Rekap Toko</a>
                 <a class="collapse-item" href="rekaprs">Rekap RS</a>
                 <a class="collapse-item" href="rekapmenurs">Rekap Kantin</a>
+                <a class="collapse-item" href="rekapkeuangan">Rekap Keuangan</a>
             </div>
         </div>
     </li>
@@ -53,21 +54,21 @@
     // Bagian PHP untuk Level 1 (Admin)
     if ($hasil['level'] == 1) {
     ?>
-    <hr class="sidebar-divider">
+        <hr class="sidebar-divider">
 
-    <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSettings"
-            aria-expanded="true" aria-controls="collapseSettings">
-            <i class="bi bi-gear-fill"></i> <span>Pengaturan Sistem</span>
-        </a>
-        <div id="collapseSettings" class="collapse" aria-labelledby="headingSettings" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <h6 class="collapse-header">Manajemen Data:</h6>
-                <a class="collapse-item" href="user">Manajemen User</a>
-                <a class="collapse-item" href="kios">Manajemen Toko</a>
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSettings"
+                aria-expanded="true" aria-controls="collapseSettings">
+                <i class="bi bi-gear-fill"></i> <span>Pengaturan Sistem</span>
+            </a>
+            <div id="collapseSettings" class="collapse" aria-labelledby="headingSettings" data-parent="#accordionSidebar">
+                <div class="bg-white py-2 collapse-inner rounded">
+                    <h6 class="collapse-header">Manajemen Data:</h6>
+                    <a class="collapse-item" href="user">Manajemen User</a>
+                    <a class="collapse-item" href="kios">Manajemen Toko</a>
+                </div>
             </div>
-        </div>
-    </li>
+        </li>
     <?php
     }
     ?>
