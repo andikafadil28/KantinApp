@@ -1,7 +1,27 @@
 <?php
 include "Database/connect.php";
 
-$query = mysqli_query($conn, "SELECT *, SUM(((harga+pajak)*0.11)*jumlah) as ppn_pajak, SUM(((harga+pajak)+((harga+pajak)*0.11))*jumlah) AS harganya,((harga+pajak)+((harga+pajak)*0.11)) AS harga_jual,sum(harga*jumlah) AS harganya_toko from tb_list_order
+$query = mysqli_query($conn, "SELECT *,
+SUM(
+    CASE
+        WHEN tb_menu.kategori = 3 THEN 0
+        ELSE ((harga+pajak)*0.11)*jumlah
+    END
+) as ppn_pajak,
+SUM(
+    CASE
+        WHEN tb_menu.kategori = 3 THEN harga*jumlah
+        ELSE ((harga+pajak)+((harga+pajak)*0.11))*jumlah
+    END
+) AS harganya,
+(
+    CASE
+        WHEN tb_menu.kategori = 3 THEN harga
+        ELSE (harga+pajak)+((harga+pajak)*0.11)
+    END
+) AS harga_jual,
+sum(harga*jumlah) AS harganya_toko
+from tb_list_order
 LEFT JOIN tb_order ON tb_order.id_order = tb_list_order.kode_order
 LEFT JOIN tb_menu ON tb_menu.id = tb_list_order.menu
 LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_list_order.kode_order
@@ -13,8 +33,29 @@ $customer = $_GET['pelanggan'];
 $toko = $_GET['kios'];
 $diskon = $_GET['diskon'] ?? 0;
 $waktu_order = $GET['waktu_order'] ?? date('Y-m-d H:i:s');
-$set_menu = mysqli_query($conn, "SELECT id,nama FROM tb_menu WHERE nama_toko = '$toko' AND status = 1");
+$result_menu = [];
+$result_menu_regular = [];
+$result_menu_addon = [];
+$result = [];
+$result2 = [];
+$set_menu = mysqli_query($conn, "SELECT tb_menu.id,tb_menu.nama FROM tb_menu
+WHERE tb_menu.nama_toko = '$toko' AND tb_menu.status = 1");
+$set_menu_regular = mysqli_query($conn, "SELECT tb_menu.id,tb_menu.nama FROM tb_menu
+WHERE tb_menu.nama_toko = '$toko' AND tb_menu.status = 1 AND tb_menu.kategori <> 3");
+$set_menu_addon = mysqli_query($conn, "SELECT tb_menu.id,tb_menu.nama FROM tb_menu
+WHERE tb_menu.nama_toko = '$toko' AND tb_menu.status = 1 AND tb_menu.kategori = 3");
 $query2 = mysqli_query($conn, "select * from tb_kios");
+
+while ($record_menu = mysqli_fetch_array($set_menu)) {
+    $result_menu[] = $record_menu;
+}
+while ($record_menu_regular = mysqli_fetch_array($set_menu_regular)) {
+    $result_menu_regular[] = $record_menu_regular;
+}
+while ($record_menu_addon = mysqli_fetch_array($set_menu_addon)) {
+    $result_menu_addon[] = $record_menu_addon;
+}
+
 while ($record = mysqli_fetch_array($query)) {
     $result[] = $record;
     // $kode = $record['id_order'];
@@ -102,7 +143,12 @@ while ($record2 = mysqli_fetch_array($query2)) {
                                     foreach ($result as $row) {
                                     ?>
                                         <tr>
-                                            <td><?php echo $row['nama'] ?></td>
+                                            <td>
+                                                <?php echo $row['nama'] ?>
+                                                <?php if ((int)($row['kategori'] ?? 0) === 3) { ?>
+                                                    <span class="badge bg-info ms-1">Addon</span>
+                                                <?php } ?>
+                                            </td>
                                             <td><?php echo number_format($row['harga_jual'], 0, ',', '.') ?></td>
                                             <td><?php echo $row['jumlah'] ?></td>
                                             <td><?php echo $row['catatan_order'] ?></td>
@@ -189,13 +235,32 @@ while ($record2 = mysqli_fetch_array($query2)) {
                     <?php
                     }
                     ?>
-                    <div>
+                    <div class="row g-3 mb-3">
                         <?php
                         if ($_SESSION["level_kantin"] == 1) {
                         ?>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tambahItem"><i class="bi bi-plus-square-dotted"></i> Item</button>
-                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#bayar"><i class="bi bi-cash-coin"></i> Bayar</button>
-                            <button class="btn btn-info" onclick="printStruk()"><i class="bi bi-printer"></i> Print Struk</button>
+                            <div class="col-md-6">
+                                <div class="card border-primary h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title mb-2">Tambah Item Menu</h6>
+                                        <p class="card-text small text-muted mb-3">Item standar dengan perhitungan harga normal.</p>
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tambahItem"><i class="bi bi-plus-square-dotted"></i> Item</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-info h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title mb-2">Tambah Addon</h6>
+                                        <p class="card-text small text-muted mb-3">Addon tidak dikenakan PPN, total berdasarkan harga per barang.</p>
+                                        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#tambahAddon"><i class="bi bi-plus-square-dotted"></i> Addon</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 d-flex flex-wrap gap-2">
+                                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#bayar"><i class="bi bi-cash-coin"></i> Bayar</button>
+                                <button class="btn btn-info" onclick="printStruk()"><i class="bi bi-printer"></i> Print Struk</button>
+                            </div>
                         <?php
                         } else {
                             // Cek apakah sudah bayar (id_bayar tidak kosong pada salah satu item)
@@ -209,9 +274,28 @@ while ($record2 = mysqli_fetch_array($query2)) {
                                 }
                             }
                         ?>
-                            <button class="<?php echo (!empty($row['id_bayar'])) ? "btn btn-secondary disabled" : "btn btn-primary"; ?>" data-bs-toggle="modal" data-bs-target="#tambahItem"><i class="bi bi-plus-square-dotted"></i> Item</button>
-                            <button class="<?php echo (!empty($row['id_bayar'])) ? "btn btn-secondary disabled" : "btn btn-success"; ?>" data-bs-toggle="modal" data-bs-target="#bayar"><i class="bi bi-cash-coin"></i> Bayar</button>
-                            <button class="btn btn-info<?php echo $sudah_bayar ? '' : ' disabled'; ?>" onclick="if(<?php echo $sudah_bayar ? 'true' : 'false'; ?>) printStruk()"><i class="bi bi-printer"></i> Print Struk</button>
+                            <div class="col-md-6">
+                                <div class="card border-primary h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title mb-2">Tambah Item Menu</h6>
+                                        <p class="card-text small text-muted mb-3">Item standar dengan perhitungan harga normal.</p>
+                                        <button class="<?php echo (!empty($row['id_bayar'])) ? "btn btn-secondary disabled" : "btn btn-primary"; ?>" data-bs-toggle="modal" data-bs-target="#tambahItem"><i class="bi bi-plus-square-dotted"></i> Item</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-info h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title mb-2">Tambah Addon</h6>
+                                        <p class="card-text small text-muted mb-3">Addon tidak dikenakan PPN, total berdasarkan harga per barang.</p>
+                                        <button class="<?php echo (!empty($row['id_bayar'])) ? "btn btn-secondary disabled" : "btn btn-info"; ?>" data-bs-toggle="modal" data-bs-target="#tambahAddon"><i class="bi bi-plus-square-dotted"></i> Addon</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 d-flex flex-wrap gap-2">
+                                <button class="<?php echo (!empty($row['id_bayar'])) ? "btn btn-secondary disabled" : "btn btn-success"; ?>" data-bs-toggle="modal" data-bs-target="#bayar"><i class="bi bi-cash-coin"></i> Bayar</button>
+                                <button class="btn btn-info<?php echo $sudah_bayar ? '' : ' disabled'; ?>" onclick="if(<?php echo $sudah_bayar ? 'true' : 'false'; ?>) printStruk()"><i class="bi bi-printer"></i> Print Struk</button>
+                            </div>
                         <?php
                         }
                         ?>
@@ -322,6 +406,9 @@ while ($record2 = mysqli_fetch_array($query2)) {
                         <tr>
                             <td colspan="1">
                                 <?php echo $row['nama']; ?>
+                                <?php if ((int)($row['kategori'] ?? 0) === 3) {
+                                    echo " (Addon)";
+                                } ?>
                             </td>
                             <td class="text-center">
                                 <?php echo $row['jumlah']; ?>

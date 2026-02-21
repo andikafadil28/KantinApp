@@ -21,7 +21,7 @@
                                                       data-placeholder="Pilih Menu" style="width:100%">
                                                       <option value=""></option>
                                                       <?php
-                                                      foreach ($set_menu as $value) {
+                                                      foreach ($result_menu_regular as $value) {
                                                             ?>
                                                             <option value="<?php echo $value['id'] ?>">
                                                                   <?php echo $value['nama'] ?>
@@ -54,25 +54,31 @@
                                     (function ($) {
                                           $(function () {
                                                 function initMenuSelect($modal) {
-                                                      var $sel = $modal.find('#menu-pilihan');
-                                                      if ($sel.length && !$sel.hasClass('select2-initialized')) {
-                                                            $sel.select2({
-                                                                  placeholder: $sel.data('placeholder') || 'Pilih Menu',
-                                                                  allowClear: true,
-                                                                  width: '100%',
-                                                                  dropdownParent: $modal.find('.modal-content')
-                                                            });
-                                                            $sel.addClass('select2-initialized');
-                                                      }
+                                                      $modal.find('.select2').each(function () {
+                                                            var $sel = $(this);
+                                                            if (!$sel.hasClass('select2-initialized')) {
+                                                                  $sel.select2({
+                                                                        placeholder: $sel.data('placeholder') || 'Pilih Menu',
+                                                                        allowClear: true,
+                                                                        width: '100%',
+                                                                        dropdownParent: $modal.find('.modal-content')
+                                                                  });
+                                                                  $sel.addClass('select2-initialized');
+                                                            }
+                                                      });
                                                 }
 
                                                 // Inisialisasi saat modal dibuka
                                                 $('#tambahItem').on('shown.bs.modal', function () {
                                                       initMenuSelect($(this));
                                                 });
+                                                $('#tambahAddon').on('shown.bs.modal', function () {
+                                                      initMenuSelect($(this));
+                                                });
 
                                                 // Jika modal mungkin sudah terbuka saat load
                                                 initMenuSelect($('#tambahItem'));
+                                                initMenuSelect($('#tambahAddon'));
                                           });
                                     })(jQuery);
                               </script>
@@ -82,6 +88,77 @@
                                                 <input type="text" class="form-control" id="catatan_order"
                                                       placeholder="Masukan Keterangan" name="catatan_order">
                                                 <label for="catatan_order">Catatan</label>
+                                          </div>
+                                    </div>
+                              </div>
+
+                              <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                          data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary"
+                                          name="input_order_item_proses">Simpan</button>
+                              </div>
+                        </form>
+                  </div>
+            </div>
+      </div>
+</div>
+<!-- Modal tambah addon -->
+<div class="modal fade" id="tambahAddon" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+      aria-labelledby="staticBackdropLabelAddon" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-fullscreen-md-down">
+            <div class="modal-content">
+                  <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="staticBackdropLabelAddon">Tambah Addon</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                        <form class="needs-validation" novalidate action="validate/validate_order_item.php"
+                              method="post">
+                              <input type="hidden" name="kode_order" value="<?php echo $kode ?>">
+                              <input type="hidden" name="meja" value="<?php echo $meja ?>">
+                              <input type="hidden" name="pelanggan" value="<?php echo $customer ?>">
+                              <input type="hidden" name="kios" value="<?php echo $toko ?>">
+                              <input type="hidden" name="item_type" value="addon">
+                              <div class="row mt-3">
+                                    <div class="col-lg-6">
+                                          <div class="form-floating mb-3">
+                                                <select class="form-select select2" name="menu" id="menu-addon-pilihan"
+                                                      data-placeholder="Pilih Addon" style="width:100%">
+                                                      <option value=""></option>
+                                                      <?php
+                                                      foreach ($result_menu_addon as $value) {
+                                                            ?>
+                                                            <option value="<?php echo $value['id'] ?>">
+                                                                  <?php echo $value['nama'] ?>
+                                                            </option>
+                                                            <?php
+                                                      }
+                                                      ?>
+                                                </select>
+                                          </div>
+                                    </div>
+                              </div>
+
+                              <div class="row mb-3">
+                                    <div class="col-lg-4">
+                                          <div class="form-floating">
+                                                <input type="number" class="form-control" id="floatingJumlahAddon"
+                                                      placeholder="Masukan Jumlah" name="jumlah" required>
+                                                <label for="floatingJumlahAddon">Jumlah</label>
+                                                <div class="invalid-feedback">
+                                                      Jumlah tidak boleh kosong
+                                                </div>
+                                          </div>
+                                    </div>
+                              </div>
+
+                              <div class="row mb-3">
+                                    <div class="col">
+                                          <div class="form-floating">
+                                                <input type="text" class="form-control" id="catatan_order_addon"
+                                                      placeholder="Masukan Keterangan" name="catatan_order">
+                                                <label for="catatan_order_addon">Catatan</label>
                                           </div>
                                     </div>
                               </div>
@@ -128,7 +205,7 @@ if (empty($result)) {
                                                             <select class="form-select" name="menu" id="">
                                                                   <option selected hidden value="">Pilih Menu</option>
                                                                   <?php
-                                                                  foreach ($set_menu as $value) {
+                                                                  foreach ($result_menu as $value) {
                                                                         if ($row['menu'] == $value['id']) {
                                                                               echo "<option selected value='" . $value['id'] . "'>" . $value['nama'] . "</option>";
                                                                         } else {
@@ -242,7 +319,12 @@ if (empty($result)) {
                                                 foreach ($result as $row) {
                                                       ?>
                                                       <tr>
-                                                            <td><?php echo $row['nama'] ?></td>
+                                                            <td>
+                                                                  <?php echo $row['nama'] ?>
+                                                                  <?php if ((int) ($row['kategori'] ?? 0) === 3) { ?>
+                                                                        <span class="badge bg-info ms-1">Addon</span>
+                                                                  <?php } ?>
+                                                            </td>
                                                             <td><?php echo number_format($row['harga_jual'], 0, ',', '.') ?></td>
                                                             <td><?php echo $row['jumlah'] ?></td>
                                                             <td><?php echo $row['catatan_order'] ?></td>
