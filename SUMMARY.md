@@ -5,9 +5,20 @@
 
 # CURRENT
 
-Fokus aktif: **Deployment Ubuntu + stabilisasi POS kantin**. Konfigurasi Docker sedang disiapkan dan belum di-commit. Redirect logout sudah diarahkan ke `/kantinsakina`, sedangkan koneksi database sudah mendukung environment variable dengan fallback Laragon. Detail lengkap: AGENTS.md.
+Fokus aktif: **Deployment Ubuntu + smoke test POS kantin**. Versi aplikasi `9891566` sudah ter-deploy pada Ubuntu uji `192.168.0.214`. Stack Docker, Tailscale, MySQL, import rehearsal, login, dan halaman order sudah berjalan. Diagnosis dashboard Home dilanjutkan pada sesi berikutnya. Detail lengkap: AGENTS.md.
 
-Deployment Ubuntu sedang direncanakan dan belum dieksekusi. Server disiapkan sebagai host multi-application untuk KantinApp (PHP native) dan aplikasi Carwash (Laravel). Setup dilakukan bertahap melalui SSH, dengan verifikasi pada setiap step sebelum lanjut.
+Server disiapkan sebagai host multi-application untuk KantinApp (PHP native) dan aplikasi Carwash (Laravel). Setup dilakukan bertahap melalui SSH, dengan verifikasi pada setiap step sebelum lanjut.
+
+## Resume Besok
+
+- URL uji aktif: `http://192.168.0.214:85/kantinsakina`
+- Tailscale aktif: hostname `kantin-server`, IP `100.92.230.124`, key expiry disabled
+- Container `app` dan `db` healthy; port host `85` ter-publish
+- MySQL rehearsal berisi 16 tabel: 9 kios, 305 menu, 5.417 order, 10.186 item, 5.416 pembayaran
+- Login berhasil dan transaksi tidak hilang; `ONLY_FULL_GROUP_BY` sudah dinonaktifkan untuk kompatibilitas query legacy
+- Issue tersisa: Home di browser masih menampilkan `0`, padahal query PHP dalam container menghasilkan 23 porsi harian dan 108 porsi top-5 mingguan
+- Next diagnosis: ambil HTML Apache dengan `curl`, lalu cek nilai `const labels/dataValues` dan kartu `Penjualan hari ini`
+- Backup NAS, verifikasi seluruh foto, restore test, reboot test, final export/import, dan cutover `.215` belum dilakukan
 
 # Deployment Ubuntu
 
@@ -20,7 +31,7 @@ Deployment Ubuntu sedang direncanakan dan belum dieksekusi. Server disiapkan seb
 | URL pengujian | `http://192.168.0.214:85/kantinsakina` |
 | URL produksi | `http://192.168.0.215:85/kantinsakina` |
 | Port aplikasi | Host Ubuntu `85` → Apache container `80` |
-| Database aktif | MySQL/MariaDB dalam container Docker di Ubuntu |
+| Database aktif | MySQL `8.0.46` dalam container Docker di Ubuntu |
 | Migrasi database | Export/import SQL dari MySQL Windows |
 | Foto menu | Transfer `assets/img` ke storage persisten Ubuntu |
 | Remote management | SSH melalui Tailscale sebagai jalur utama/cadangan |
@@ -51,7 +62,7 @@ Ubuntu menjadi host Docker untuk beberapa aplikasi, tetapi setiap aplikasi memak
 - [x] Jalankan stack pengujian pada `192.168.0.214:85`
 - [x] Pastikan aplikasi tersedia di `/kantinsakina`
 - [x] Cek versi MySQL/MariaDB pada server Windows
-- [ ] Export/import database rehearsal ke Docker Ubuntu
+- [x] Export/import database rehearsal ke Docker Ubuntu
 - [ ] Transfer dan verifikasi seluruh `assets/img`
 - [ ] Mount SMB NAS `//192.168.0.76/master it`
 - [ ] Pasang backup otomatis pukul `12:00` dan `23:00` WIB
@@ -95,11 +106,11 @@ Ubuntu menjadi host Docker untuk beberapa aplikasi, tetapi setiap aplikasi memak
 | Export Excel (PhpSpreadsheet, 8 file) | ✅ SELESAI |
 | Auth session + level (1=admin / 3=kasir) | ✅ AKTIF |
 | Hardening SQLi/XSS + cleanup backup | ⏳ PRIORITAS |
-| Commit `validate_logout.php` | ⏳ PENDING |
+| Commit `validate_logout.php` | ✅ SELESAI (`c0ceac4`) |
 
 # Teknologi Singkat
 
-- **PHP native procedural** (Laragon) — tanpa framework/autoload; MySQL DB `sakinakantin` (user `root`, no pass) via `Database/connect.php`
+- **PHP native procedural** — tanpa framework/autoload; koneksi MySQL via environment variable di Docker dengan fallback Laragon lokal
 - Routing mini `.htaccess`: `/halaman` → `index.php?x=halaman`, halaman map di switch `index.php`
 - Auth session manual, `password_verify()`/`password_hash`; role **level 1 = admin**, **level 3 = kasir/toko** (auto-filter kios sendiri)
 - Template SB Admin 2 + Bootstrap 5.3 CDN; composer cuma `phpoffice/phpspreadsheet ^4.5` buat export Excel
@@ -107,6 +118,11 @@ Ubuntu menjadi host Docker untuk beberapa aplikasi, tetapi setiap aplikasi memak
 
 # Changelog Terbaru
 
+- **01 Sep 2026** `9891566` — samakan SQL mode aplikasi legacy
+- **01 Sep 2026** `99a719b` — fix query dashboard MySQL strict
+- **01 Sep 2026** `b10d40f` — fix publish port aplikasi Docker
+- **01 Sep 2026** `6b81f6b` — fix build extension PHP Docker
+- **01 Sep 2026** `c0ceac4` — siapkan deployment Docker Ubuntu
 - **25 Apr 2026** `6f8355d` — nambah filter kantin
 - **09 Mar 2026** — ubah chart (2x) + ubah template warna
 - **13 Feb 2026** `3fbf3b9` — Update v1.4.4 laporan keuangan
