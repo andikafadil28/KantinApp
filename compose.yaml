@@ -43,12 +43,15 @@ services:
         source: ${UPLOADS_PATH:?UPLOADS_PATH wajib diisi}
         target: /var/www/html/kantinsakina/assets/img
     networks:
+      - frontend
       - backend
     depends_on:
       db:
         condition: service_healthy
 
 networks:
+  frontend:
+    driver: bridge
   backend:
     internal: true
 
