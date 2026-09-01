@@ -2,24 +2,16 @@ FROM php:8.3-apache-bookworm
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        curl \
         libfreetype6-dev \
         libjpeg62-turbo-dev \
-        libonig-dev \
         libpng-dev \
-        libxml2-dev \
         libzip-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
-        dom \
         gd \
-        mbstring \
         mysqli \
-        simplexml \
-        xml \
-        xmlreader \
-        xmlwriter \
         zip \
+    && php -r 'foreach (["ctype", "dom", "fileinfo", "gd", "iconv", "libxml", "mbstring", "mysqli", "SimpleXML", "xml", "xmlreader", "xmlwriter", "zip", "zlib"] as $extension) { if (!extension_loaded($extension)) { fwrite(STDERR, "Missing PHP extension: $extension\n"); exit(1); } }' \
     && a2enmod rewrite headers \
     && rm -rf /var/lib/apt/lists/*
 

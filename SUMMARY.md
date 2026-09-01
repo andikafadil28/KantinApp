@@ -41,13 +41,13 @@ Ubuntu menjadi host Docker untuk beberapa aplikasi, tetapi setiap aplikasi memak
 - [x] Tambahkan Dockerfile dan Docker Compose
 - [x] Tambahkan konfigurasi Apache, PHP, dan health check
 - [x] Tambahkan `.env.example` dan ignore seluruh secret production
-- [ ] Review dan push konfigurasi deployment ke GitHub
+- [x] Review dan push konfigurasi deployment ke GitHub (`c0ceac4`)
 - [x] Jalankan preflight Ubuntu melalui SSH
 - [x] Install Tailscale langsung pada host Ubuntu
 - [x] Verifikasi SSH melalui Tailscale sebelum mengubah jaringan
 - [x] Install Docker Engine dan Docker Compose Plugin
 - [x] Verifikasi kapasitas CPU, RAM, dan disk untuk dua aplikasi
-- [ ] Clone GitHub ke `/srv/kantinsakina`
+- [x] Clone GitHub ke `/srv/kantinsakina`
 - [ ] Jalankan stack pengujian pada `192.168.0.214:85`
 - [ ] Pastikan aplikasi tersedia di `/kantinsakina`
 - [x] Cek versi MySQL/MariaDB pada server Windows
