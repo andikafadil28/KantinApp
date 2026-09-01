@@ -12,6 +12,8 @@ Dokumen ini adalah runbook deployment KantinApp melalui SSH. Jalankan satu check
 - Database: MySQL 8.0 dalam Docker, tidak diekspos ke LAN
 - Backup NAS: pukul 12:00 dan 23:00 WIB, retensi 30 hari
 
+MySQL mempertahankan strict mode, tetapi `ONLY_FULL_GROUP_BY` dinonaktifkan untuk kompatibilitas query legacy aplikasi. Jangan mengubah SQL mode atau rumus laporan keuangan tanpa smoke test lengkap.
+
 ## Update Source
 
 Clone pertama kali:
