@@ -15,7 +15,7 @@ $data = mysqli_query($conn, "
                     LEFT JOIN tb_menu ON tb_menu.id = tb_list_order.menu
                     LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_list_order.kode_order
                     WHERE tb_order.waktu_order BETWEEN '$todayStart' AND '$todayEnd'
-                    GROUP BY tb_menu.nama, tb_menu.nama_toko
+                    GROUP BY tb_menu.nama, tb_menu.harga, tb_menu.nama_toko
                     ORDER BY Total_Terjual DESC
                     limit 5;");
 

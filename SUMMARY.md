@@ -48,8 +48,8 @@ Ubuntu menjadi host Docker untuk beberapa aplikasi, tetapi setiap aplikasi memak
 - [x] Install Docker Engine dan Docker Compose Plugin
 - [x] Verifikasi kapasitas CPU, RAM, dan disk untuk dua aplikasi
 - [x] Clone GitHub ke `/srv/kantinsakina`
-- [ ] Jalankan stack pengujian pada `192.168.0.214:85`
-- [ ] Pastikan aplikasi tersedia di `/kantinsakina`
+- [x] Jalankan stack pengujian pada `192.168.0.214:85`
+- [x] Pastikan aplikasi tersedia di `/kantinsakina`
 - [x] Cek versi MySQL/MariaDB pada server Windows
 - [ ] Export/import database rehearsal ke Docker Ubuntu
 - [ ] Transfer dan verifikasi seluruh `assets/img`
