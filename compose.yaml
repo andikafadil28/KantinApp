@@ -1,0 +1,56 @@
+name: kantinsakina
+
+services:
+  db:
+    image: mysql:8.0.46
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:?DB_NAME wajib diisi}
+      MYSQL_USER: ${DB_USER:?DB_USER wajib diisi}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib diisi}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD wajib diisi}
+      TZ: Asia/Jakarta
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root --password=$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+    restart: unless-stopped
+    environment:
+      APP_BASE_PATH: ${APP_BASE_PATH:?APP_BASE_PATH wajib diisi}
+      DB_HOST: ${DB_HOST:?DB_HOST wajib diisi}
+      DB_PORT: ${DB_PORT:?DB_PORT wajib diisi}
+      DB_NAME: ${DB_NAME:?DB_NAME wajib diisi}
+      DB_USER: ${DB_USER:?DB_USER wajib diisi}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib diisi}
+      TZ: Asia/Jakarta
+    ports:
+      - "${APP_PORT:?APP_PORT wajib diisi}:80"
+    volumes:
+      - type: bind
+        source: ${UPLOADS_PATH:?UPLOADS_PATH wajib diisi}
+        target: /var/www/html/kantinsakina/assets/img
+    networks:
+      - backend
+    depends_on:
+      db:
+        condition: service_healthy
+
+networks:
+  backend:
+    internal: true
+
+volumes:
+  db_data:
