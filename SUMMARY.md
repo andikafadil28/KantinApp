@@ -5,20 +5,20 @@
 
 # CURRENT
 
-Fokus aktif: **Deployment Ubuntu + smoke test POS kantin**. Versi aplikasi `9891566` sudah ter-deploy pada Ubuntu uji `192.168.0.214`. Stack Docker, Tailscale, MySQL, import rehearsal, login, dan halaman order sudah berjalan. Diagnosis dashboard Home dilanjutkan pada sesi berikutnya. Detail lengkap: AGENTS.md.
+Fokus aktif: **Final cutover Ubuntu tengah malam**. Versi `7146dcf` sudah ter-deploy pada Ubuntu uji `192.168.0.214`. Dashboard, transaksi sampai pembayaran, laporan/export, backup NAS, restore test, dan reboot test sudah lolos. Tidak ada blocker aplikasi aktif. Detail dan urutan cutover lengkap: AGENTS.md.
 
 Server disiapkan sebagai host multi-application untuk KantinApp (PHP native) dan aplikasi Carwash (Laravel). Setup dilakukan bertahap melalui SSH, dengan verifikasi pada setiap step sebelum lanjut.
 
-## Resume Besok
+## Resume Cutover
 
 - URL uji aktif: `http://192.168.0.214:85/kantinsakina`
 - Tailscale aktif: hostname `kantin-server`, IP `100.92.230.124`, key expiry disabled
 - Container `app` dan `db` healthy; port host `85` ter-publish
-- MySQL rehearsal berisi 16 tabel: 9 kios, 305 menu, 5.417 order, 10.186 item, 5.416 pembayaran
+- MySQL rehearsal setelah smoke test: 16 tabel, 9 kios, 305 menu, 5.418 order, 10.188 item, 5.417 pembayaran
 - Login berhasil dan transaksi tidak hilang; `ONLY_FULL_GROUP_BY` sudah dinonaktifkan untuk kompatibilitas query legacy
-- Issue tersisa: Home di browser masih menampilkan `0`, padahal query PHP dalam container menghasilkan 23 porsi harian dan 108 porsi top-5 mingguan
-- Next diagnosis: ambil HTML Apache dengan `curl`, lalu cek nilai `const labels/dataValues` dan kartu `Penjualan hari ini`
-- Backup NAS, verifikasi seluruh foto, restore test, reboot test, final export/import, dan cutover `.215` belum dilakukan
+- Root cause Home adalah permission `menu_telaris.php` mode `600`; sudah diperbaiki menjadi `644` dan diverifikasi setelah rebuild/reboot
+- Foto tervalidasi `missing=0`; NAS automount, Restic, direct SQL, retensi 30 hari, timer 12:00/23:00, dan restore test sudah lolos
+- Next: verifikasi backup 23:00, write freeze Windows, dump/import final, sinkronisasi foto, smoke `.214`, lalu pindah ke `.215`
 
 # Deployment Ubuntu
 
@@ -63,15 +63,15 @@ Ubuntu menjadi host Docker untuk beberapa aplikasi, tetapi setiap aplikasi memak
 - [x] Pastikan aplikasi tersedia di `/kantinsakina`
 - [x] Cek versi MySQL/MariaDB pada server Windows
 - [x] Export/import database rehearsal ke Docker Ubuntu
-- [ ] Transfer dan verifikasi seluruh `assets/img`
-- [ ] Mount SMB NAS `//192.168.0.76/master it`
-- [ ] Pasang backup otomatis pukul `12:00` dan `23:00` WIB
-- [ ] Terapkan retensi backup 30 hari
-- [ ] Jalankan backup dan restore test
-- [ ] Smoke test login, home, menu, order, bayar, laporan, dan rekap
-- [ ] Aktifkan auto-start Docker, container, Tailscale, mount NAS, dan backup timer
+- [x] Transfer dan verifikasi seluruh `assets/img` (`tb_menu.foto` missing `0`)
+- [x] Mount SMB NAS `//192.168.0.76/master it` dengan systemd automount
+- [x] Pasang backup otomatis pukul `12:00` dan `23:00` WIB
+- [x] Terapkan retensi backup 30 hari untuk Restic dan direct SQL
+- [x] Jalankan backup, full integrity check, dan restore/import test
+- [x] Smoke test login, home, menu, order, bayar, laporan, rekap, dan export
+- [x] Aktifkan auto-start Docker, container, Tailscale, mount NAS, dan backup timer
 - [ ] Aktifkan `Restore on AC Power Loss` pada BIOS/UEFI
-- [ ] Uji reboot dan pastikan seluruh service kembali aktif
+- [x] Uji reboot dan pastikan seluruh service kembali aktif
 - [ ] Hentikan transaksi Windows saat final cutover tengah malam
 - [ ] Export/import database final dan sinkronkan foto terakhir
 - [ ] Pindahkan IP Ubuntu dari `.214` ke `.215` melalui SSH Tailscale
@@ -118,6 +118,8 @@ Ubuntu menjadi host Docker untuk beberapa aplikasi, tetapi setiap aplikasi memak
 
 # Changelog Terbaru
 
+- **02 Sep 2026** `7146dcf` — fix warning alur pembayaran
+- **02 Sep 2026** `83cbd77` — catat progres deployment Ubuntu
 - **01 Sep 2026** `9891566` — samakan SQL mode aplikasi legacy
 - **01 Sep 2026** `99a719b` — fix query dashboard MySQL strict
 - **01 Sep 2026** `b10d40f` — fix publish port aplikasi Docker

@@ -5,9 +5,9 @@ KantinApp — Sakina Kantin (POS / Point of Sale kantin)
 
 # CURRENT
 
-Fokus aktif: **Deployment Ubuntu + smoke test aplikasi POS kantin**. Versi aplikasi `9891566` (1 Sep 2026, "samakan sql mode aplikasi legacy") sudah ter-deploy pada server uji Ubuntu `192.168.0.214`. Docker, Tailscale, MySQL, import rehearsal, login, dan halaman order sudah berjalan. Blocker aktif: dashboard Home di browser masih menampilkan angka `0`, padahal query PHP langsung dalam container menghasilkan data. Setup tetap dilakukan user melalui SSH, satu checkpoint per respons.
+Fokus aktif: **Final cutover Ubuntu tengah malam**. Versi aplikasi `7146dcf` (2 Sep 2026, "fix warning alur pembayaran") sudah ter-deploy dan tervalidasi pada server uji Ubuntu `192.168.0.214`. Docker, Tailscale, MySQL rehearsal, dashboard, transaksi sampai pembayaran, laporan/export, backup NAS, restore test, dan reboot test sudah lolos. Tidak ada blocker aplikasi aktif. Setup tetap dilakukan user melalui SSH, satu checkpoint per respons.
 
-## Deployment Ubuntu - Status 1 Sep 2026
+## Deployment Ubuntu - Status 2 Sep 2026
 
 ### Server
 
@@ -32,6 +32,7 @@ Fokus aktif: **Deployment Ubuntu + smoke test aplikasi POS kantin**. Versi aplik
 - Container `kantinsakina-app-1` dan `kantinsakina-db-1` healthy
 - App publish `0.0.0.0:85 -> 80`; DB `3306` tidak dipublish ke host/LAN
 - Compose memakai frontend bridge untuk publish app dan backend internal untuk app-to-DB
+- Reboot test lolos: Docker, Tailscale, Chrony, kedua container, NAS automount, dan backup timer kembali aktif otomatis
 
 ### Database Rehearsal
 
@@ -42,6 +43,8 @@ Fokus aktif: **Deployment Ubuntu + smoke test aplikasi POS kantin**. Versi aplik
 - Data: 9 kios, 305 menu, 5.417 order, 10.186 list item, 5.416 pembayaran
 - `ONLY_FULL_GROUP_BY` dinonaktifkan untuk kompatibilitas banyak query legacy `SELECT * + GROUP BY`; strict mode lain tetap aktif
 - Container DB memakai named volume, jadi recreate container tidak menghapus data
+- Setelah smoke test: 9 kios, 305 menu, 5.418 order, 10.188 list item, 5.417 pembayaran
+- Restore test ke database terisolasi `sakinakantin_restore_test` menghasilkan count yang sama; database test sudah dihapus
 
 ### Fix Deployment yang Sudah Dipush
 
@@ -50,40 +53,66 @@ Fokus aktif: **Deployment Ubuntu + smoke test aplikasi POS kantin**. Versi aplik
 - `b10d40f` - frontend network agar host port `85` efektif ter-publish
 - `99a719b` - query dashboard menambahkan `tb_menu.harga` ke `GROUP BY`
 - `9891566` - SQL mode kompatibel aplikasi legacy tanpa mematikan strict mode lainnya
+- `7146dcf` - inisialisasi state order kosong, koreksi `$_GET`, escape `kode_order`, dan hapus warning `$message` pembayaran
 
-### Blocker Aktif - Dashboard Home
+### Dashboard Home - Selesai
 
-- Browser Home masih menampilkan `0` dan `Belum ada data`
-- Tidak ada fatal error terbaru setelah SQL mode diperbaiki
-- Query MySQL membuktikan ada 17 order hari ini dan 97 order dalam 7 hari
-- Query join dashboard langsung mengembalikan top menu, misalnya `Nasi PUTIH` 31
-- PHP CLI dalam container memakai waktu benar (`2026-09-01 20:52 WIB`) dan menghasilkan:
-  - Harian: 5 menu / 23 porsi
-  - Mingguan: 5 menu / 108 porsi
-- Source running container sudah benar: query harian `GROUP BY tb_menu.nama, tb_menu.harga, tb_menu.nama_toko`
-- Hard refresh, logout/login, dan cache-buster browser belum menyelesaikan tampilan nol
+- Root cause: `/var/www/html/kantinsakina/Database/Query/menu_telaris.php` bermode `600 root:root`, sehingga Apache `www-data` mendapat `Permission denied`
+- Permission source host dan image hasil rebuild sudah `644`; response Apache dan browser kembali menampilkan data mingguan
+- Nilai harian `0` pada 2 Sep 2026 valid karena data rehearsal terakhir berasal dari 1 Sep; bukan kegagalan query
+- Log PHP bersih setelah patch `7146dcf` dan pengulangan alur transaksi
 
-Lanjutkan diagnosis pertama dengan command berikut di Ubuntu:
+### Backup NAS - Selesai
 
-```bash
-curl -s http://127.0.0.1:85/kantinsakina/home -o /tmp/home-response.html
-grep -E 'const (labels|dataValues)' /tmp/home-response.html
-grep -n -A3 -B2 'Penjualan hari ini' /tmp/home-response.html
-```
+- Share SMB: `//192.168.0.76/master it`, mount `/mnt/kantin-backup`, target `kantin/backupDatabase`
+- Kredensial CIFS: `/root/.smbcredentials-kantinsakina`, mode `600`; nilainya tidak boleh masuk Git/chat
+- `/etc/fstab` memakai `_netdev,nofail,x-systemd.automount`; automount sudah diuji manual dan setelah reboot
+- Restic `0.18.1`, repository `backupDatabase/restic-kantinsakina`, password file `/root/.config/restic/kantinsakina-password` mode `600`
+- Script `/usr/local/sbin/kantinsakina-backup` mode `700`, dijalankan oleh `kantinsakina-backup.service`
+- Timer `kantinsakina-backup.timer` enabled + active pada pukul `12:00` dan `23:00` WIB, `Persistent=true`
+- Backup mencakup `/var/backups/kantinsakina/sakinakantin.sql` dan `/srv/kantinsakina-data/images`; Restic retensi `--keep-within 30d --prune`
+- Salinan SQL langsung tersedia di `backupDatabase/sql/sakinakantin-latest.sql` dan arsip `sakinakantin-YYYYmmdd-HHMMSS.sql`, retensi 30 hari
+- Salinan SQL langsung tidak terenkripsi; keamanan bergantung pada ACL akun/share NAS
+- `restic check --read-data` lolos tanpa error; restore snapshot menghasilkan SQL 1.277.020 byte, 16 tabel, dan 28 file foto
 
-Tujuan: memastikan apakah Apache/PHP web benar-benar merender nilai nol atau browser yang menahan DOM lama. Jangan ubah query/data sebelum hasil HTML ini diperiksa.
+### Smoke Test - Selesai
+
+- Login dan Home setelah reboot
+- Menu, foto, dan pencarian DataTables
+- Daftar order dan filter kios
+- Buat order, tambah dua item, pembayaran, dan validasi relasi langsung di database
+- Laporan umum, rekap keuangan, rincian per menu, rekap RS, dan export Excel
+- Audit seluruh `tb_menu.foto` terhadap bind mount: 305 menu, 28 file foto, `missing=0`
 
 ### Belum Dikerjakan
 
-- Verifikasi semua nama foto `tb_menu.foto` terhadap `/srv/kantinsakina-data/images`
-- Mount SMB `//192.168.0.76/master it` dan subfolder `kantin/backupDatabase`
-- Backup pukul 12:00 dan 23:00 WIB, retensi 30 hari, Restic, dan restore test
-- Smoke test lengkap menu, order item, pembayaran, laporan, rekap, dan export Excel
-- Uji reboot dan auto-start Docker/Tailscale/mount/timer
 - Aktifkan BIOS/UEFI `Restore on AC Power Loss`
 - Final export/import tengah malam dan sinkronisasi foto terakhir
 - Cutover Ubuntu `.214` ke `.215` melalui SSH Tailscale
 - Server Windows tetap dipertahankan sebagai rollback
+
+## Cutover Final Tengah Malam - Urutan Wajib
+
+1. Pertahankan code freeze pada commit `7146dcf`; jangan refactor atau ubah query sebelum cutover selesai.
+2. Pukul 23:00, verifikasi `kantinsakina-backup.timer` sukses dan snapshot/file SQL baru muncul di NAS.
+3. Pastikan SSH Tailscale ke `100.92.230.124` tetap aktif sebelum menyentuh IP LAN.
+4. Umumkan write freeze lalu hentikan order/transaksi baru pada aplikasi Windows.
+5. Catat timestamp, count, dan ID transaksi terakhir pada database Windows sebagai baseline final.
+6. Stop container aplikasi Ubuntu saja; container database tetap hidup untuk proses import.
+7. Buat dump final MySQL Windows dengan `--single-transaction`, `--quick`, routines, triggers, events, dan `--set-gtid-purged=OFF`.
+8. Validasi dump final: file nonzero, 16 `CREATE TABLE`, tanpa `CREATE DATABASE`, `USE`, atau `DEFINER`; hitung SHA-256.
+9. Transfer dump final ke `/srv/kantinsakina-data/imports`, set mode `600`, lalu cocokkan SHA-256 sumber dan tujuan.
+10. Sinkronkan delta foto final dari Windows ke `/srv/kantinsakina-data/images`, pertahankan owner UID/GID `33:33`, lalu ulang audit `tb_menu.foto`.
+11. Jalankan backup manual database rehearsal Ubuntu sebagai rollback terakhir sebelum replacement.
+12. Drop dan buat ulang database `sakinakantin`, import dump final, lalu pastikan exit code import `0`.
+13. Bandingkan 16 tabel, count tabel utama, timestamp/ID transaksi terakhir, dan data pembayaran antara Windows dan Ubuntu.
+14. Start aplikasi Ubuntu dan smoke test di `.214`: login, Home, order terakhir, item, pembayaran, laporan, rekap, export, serta foto.
+15. Putuskan server Windows dari IP `.215` dengan shutdown atau pindah IP; jangan biarkan dua host memakai `.215` bersamaan.
+16. Melalui SSH Tailscale, ubah IP Ubuntu dari `192.168.0.214/24` ke `192.168.0.215/24`, apply konfigurasi jaringan, lalu cek gateway dan LAN.
+17. Verifikasi URL produksi `http://192.168.0.215:85/kantinsakina` dari perangkat kasir.
+18. Jalankan transaksi smoke final seminimal mungkin, validasi database/log, lalu hapus hanya jika kebijakan operasional mengharuskan.
+19. Jalankan `/usr/local/sbin/kantinsakina-backup` agar Restic dan `sakinakantin-latest.sql` langsung memuat database final.
+20. Simpan server Windows sebagai rollback dalam kondisi tidak menerima transaksi dan tidak memakai IP `.215`; jangan jalankan dua sistem secara paralel setelah write freeze.
 
 # TODO
 
@@ -101,12 +130,12 @@ Tujuan: memastikan apakah Apache/PHP web benar-benar merender nilai nol atau bro
 - [ ] `proses/proses_input_user.php` — **RUSAK**: (1) insert pakai variabel `$id` yang gak pernah didefinisikan (jadi NULL/gak ketulis), (2) password pakai `md5()` padahal login pakai `password_verify()` → user yang dibikin lewat sini GAK BISA login. Fix: hapus/merge ke `validate/validate_user.php` (sudah pakai `password_hash`)
 - [ ] `validate_menu.php` (baris 75-86) — dead code: blok insert user duplikat setelah `exit()` di baris 72, gak akan pernah jalan
 - [ ] `main.php` — **double `head.php`**: di-include di bagian atas (baris 11) DAN lagi di dalam content wrapper (baris 29) → `<html><head>` dobel di output HTML
-- [ ] `order_item.php` baris 16 — typo `$GET['waktu_order']` (harusnya `$_GET`) — baru gak meledak karena `?? date(...)`
-- [ ] `validate_bayar.php` baris 53 — `echo $message;` manggil variabel yang gak di-set (notice) selain di blok `proses_bayar` yang di-comment
+- [x] `order_item.php` — typo `$GET`, state order kosong, dan input `kode_order` diperbaiki pada `7146dcf`
+- [x] `validate_bayar.php` — dead `echo $message` dihapus pada `7146dcf`
 
 ### Hardening keamanan (SQL Injection / XSS)
 - [ ] Banyak query masih string interpolation langsung dari user input (sebagian cuma `htmlentities()` yang bukan SQL escaping):
-  - `order_item.php` baris 10: `$_GET[kode_order]` langsung masuk query + `HAVING` tanpa escape — **critical**
+  - `order_item.php`: `kode_order` sudah di-escape pada `7146dcf`; input lain dan modul lain masih perlu prepared statement
   - `validate_menu.php`, `validate_bayar.php`, `validate_user.php`, `validate_kios.php`, dll: POST value masuk query tanpa bound parameter
   - `laporan.php` & `Database/Query/*` sudah pakai `mysqli_real_escape_string` untuk filter (contoh yang bener)
 - [ ] Seragamkan ke prepared statement (`mysqli_prepare`) atau minimal `mysqli_real_escape_string` untuk SEMUA input
@@ -115,8 +144,8 @@ Tujuan: memastikan apakah Apache/PHP web benar-benar merender nilai nol atau bro
 
 ### Verifikasi
 - [x] Skim seluruh struktur folder + alur routing + schema tabel (via query di kode) — selesai scan
-- [ ] `php -l` semua file yang diubah
-- [ ] Smoke test login → home → menu → order → orderitem → bayar → laporan → rekap
+- [x] `php -l` file patch deployment `7146dcf`
+- [x] Smoke test login → home → menu → order → orderitem → bayar → laporan → rekap → export pada Ubuntu rehearsal
 
 ---
 
@@ -303,7 +332,7 @@ Idempotensi order: `validate_input_order.php` cek `SELECT id_order` dulu → ale
 ## Git
 
 - Repo: `github.com/andikafadil28/KantinApp.git` (branch `main`)
-- Versi aplikasi ter-deploy: `9891566` (1 Sep 2026, "samakan sql mode aplikasi legacy")
+- Versi aplikasi ter-deploy: `7146dcf` (2 Sep 2026, "fix warning alur pembayaran")
 - Riwayat versi produk dari commit: v1.2 → v1.3 → v1.4 → v1.4.1 → v1.4.3 → v1.4.4 (Feb 2026), lalu UI chart/template/filter (Feb-Apr 2026)
 - `.gitignore` mencakup `.env`, SQL dump, dan staging backup; secret production hanya ada di Ubuntu
 - DB Docker memakai environment variable; fallback `localhost/root/password kosong` dipertahankan untuk Laragon sampai cutover
@@ -316,13 +345,15 @@ Idempotensi order: `validate_input_order.php` cek `SELECT id_order` dulu → ale
 
 # CHANGELOG
 
-## Sedang berjalan (setelah HEAD `9891566`)
+## Sedang berjalan (setelah HEAD `7146dcf`)
 
-- Diagnosis dashboard Home: CLI/query berisi data, tetapi response browser masih menampilkan nol.
-- Setup backup NAS dan final cutover belum dimulai.
+- Pre-cutover Ubuntu selesai; code freeze sampai database final dan IP `.215` selesai dipindahkan.
+- Menunggu write freeze, export/import final, sinkronisasi foto terakhir, dan cutover IP tengah malam.
 
 ## Riwayat (dari git log)
 
+- **02 Sep 2026** `7146dcf` — fix warning alur pembayaran
+- **02 Sep 2026** `83cbd77` — catat progres deployment Ubuntu
 - **01 Sep 2026** `9891566` — samakan sql mode aplikasi legacy
 - **01 Sep 2026** `99a719b` — fix query dashboard MySQL strict
 - **01 Sep 2026** `b10d40f` — fix publish port aplikasi Docker
