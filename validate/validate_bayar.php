@@ -50,7 +50,6 @@ if (isset($_POST['proses_bayar'])) {
 //         }
 
 // }
-echo $message;
 
 
 

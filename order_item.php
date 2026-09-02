@@ -1,19 +1,27 @@
 <?php
 include "Database/connect.php";
 
+$kode = $_GET['kode_order'] ?? '';
+$kode_order_query = mysqli_real_escape_string($conn, $kode);
+$result = [];
+$result2 = [];
+$total = 0;
+$diskon_nominal = 0;
+$grand_total = 0;
+$ppn = 0;
+
 $query = mysqli_query($conn, "SELECT *, SUM(((harga+pajak)*0.11)*jumlah) as ppn_pajak, SUM(((harga+pajak)+((harga+pajak)*0.11))*jumlah) AS harganya,SUM((harga+pajak)*jumlah) AS harganyanon,((harga+pajak)+((harga+pajak)*0.11)) AS harga_jual,sum(harga*jumlah) AS harganya_toko from tb_list_order
 LEFT JOIN tb_order ON tb_order.id_order = tb_list_order.kode_order
 LEFT JOIN tb_menu ON tb_menu.id = tb_list_order.menu
 LEFT JOIN tb_kategori_menu ON tb_kategori_menu.id_kategori = tb_menu.kategori
 LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_list_order.kode_order
 GROUP BY tb_list_order.id_list_order
-HAVING tb_list_order.kode_order = $_GET[kode_order]");
-$kode = $_GET['kode_order'];
-$meja = $_GET['meja'];
-$customer = $_GET['pelanggan'];
-$toko = $_GET['kios'];
+HAVING tb_list_order.kode_order = '$kode_order_query'");
+$meja = $_GET['meja'] ?? '';
+$customer = $_GET['pelanggan'] ?? '';
+$toko = $_GET['kios'] ?? '';
 $diskon = $_GET['diskon'] ?? 0;
-$waktu_order = $GET['waktu_order'] ?? date('Y-m-d H:i:s');
+$waktu_order = $_GET['waktu_order'] ?? date('Y-m-d H:i:s');
 $set_menu = mysqli_query($conn, "SELECT tb_menu.id, tb_menu.nama, tb_kategori_menu.jenis_menu
 FROM tb_menu
 LEFT JOIN tb_kategori_menu ON tb_kategori_menu.id_kategori = tb_menu.kategori
