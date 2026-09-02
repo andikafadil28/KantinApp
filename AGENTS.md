@@ -93,6 +93,14 @@ Fokus aktif: **Final cutover Ubuntu tengah malam**. Versi aplikasi `7146dcf` (2 
 
 ## Cutover Final Tengah Malam - Urutan Wajib
 
+### Handoff ke Komputer Lain
+
+- Jalankan `git pull --ff-only origin main`, lalu baca `SUMMARY.md` dan bagian ini sebelum menyentuh server.
+- Akses server tetap melalui `ssh kantin@100.92.230.124`; jangan bergantung pada IP LAN selama perpindahan `.214` ke `.215`.
+- Lanjutkan satu checkpoint per respons dan verifikasi output sebelum langkah berikutnya; jangan mengeksekusi seluruh urutan cutover sekaligus.
+- Checkpoint pertama saat resume adalah verifikasi backup otomatis pukul 23:00. Write freeze Windows baru dilakukan setelah backup dan SSH Tailscale dipastikan aman.
+- Secret SSH, MySQL, NAS, Restic, `.env`, dan isi credential file tidak boleh ditempel ke chat atau disimpan di Git.
+
 1. Pertahankan code freeze pada commit `7146dcf`; jangan refactor atau ubah query sebelum cutover selesai.
 2. Pukul 23:00, verifikasi `kantinsakina-backup.timer` sukses dan snapshot/file SQL baru muncul di NAS.
 3. Pastikan SSH Tailscale ke `100.92.230.124` tetap aktif sebelum menyentuh IP LAN.

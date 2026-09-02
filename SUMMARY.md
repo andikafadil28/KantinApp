@@ -20,6 +20,27 @@ Server disiapkan sebagai host multi-application untuk KantinApp (PHP native) dan
 - Foto tervalidasi `missing=0`; NAS automount, Restic, direct SQL, retensi 30 hari, timer 12:00/23:00, dan restore test sudah lolos
 - Next: verifikasi backup 23:00, write freeze Windows, dump/import final, sinkronisasi foto, smoke `.214`, lalu pindah ke `.215`
 
+## Handoff Komputer Lain
+
+1. Pull branch `main`, lalu baca `SUMMARY.md` dan `AGENTS.md` bagian `Cutover Final Tengah Malam - Urutan Wajib`.
+2. Akses Ubuntu melalui `ssh kantin@100.92.230.124`; jalankan satu checkpoint dan verifikasi output sebelum lanjut.
+3. Jangan masukkan password, token, `.env`, atau isi credential file ke Git/chat.
+
+## TODO Cutover Tengah Malam
+
+- [ ] Verifikasi backup timer pukul 23:00, snapshot Restic, dan direct SQL terbaru di NAS.
+- [ ] Pastikan SSH Tailscale aktif; pertahankan code freeze aplikasi `7146dcf`.
+- [ ] Terapkan write freeze Windows dan catat count serta transaksi terakhir sebagai baseline.
+- [ ] Stop container app Ubuntu, lalu buat dan validasi dump final Windows.
+- [ ] Transfer dump, cocokkan SHA-256, dan sinkronkan delta foto terakhir.
+- [ ] Backup rehearsal Ubuntu terakhir, drop/recreate database tujuan, lalu import final.
+- [ ] Cocokkan 16 tabel, count utama, transaksi terakhir, item, dan pembayaran.
+- [ ] Start app dan smoke test lengkap di `.214`.
+- [ ] Shutdown/pindahkan IP Windows, lalu ubah Ubuntu `.214` menjadi `.215` lewat Tailscale.
+- [ ] Verifikasi URL kasir, transaksi smoke final, log, dan database.
+- [ ] Jalankan backup manual agar Restic dan `sakinakantin-latest.sql` berisi data final.
+- [ ] Simpan Windows sebagai rollback tanpa menerima transaksi dan tanpa memakai `.215`.
+
 # Deployment Ubuntu
 
 ## Target
