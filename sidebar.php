@@ -15,12 +15,6 @@
         </a>
     </li>
 
-    <li class="nav-item">
-        <a class="nav-link" href="http://192.168.0.215:8000/app/login">
-            <i class="fas fa-fw fa-external-link-alt"></i> <span>aplikasi baru</span>
-        </a>
-    </li>
-
     <hr class="sidebar-divider">
 
     <li class="nav-item">

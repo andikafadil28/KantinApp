@@ -164,6 +164,32 @@
                             </div>
                         </div>
 
+                        <!-- Modal kosongkan item order -->
+                        <div class="modal fade" id="ModalClearItems<?php echo $row['id_order'] ?>" tabindex="-1" aria-labelledby="clearItemsLabel<?php echo $row['id_order'] ?>" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-fullscreen-md-down">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="clearItemsLabel<?php echo $row['id_order'] ?>">Kosongkan Item Order</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="validate/validate_clear_order_items.php" method="post">
+                                        <div class="modal-body">
+                                            <input type="hidden" name="id_order" value="<?php echo $row['id_order'] ?>">
+                                            <p class="mb-2">Hapus semua item order atas nama <strong><?php echo $row['pelanggan'] ?></strong> dengan kode order <strong><?php echo $row['id_order'] ?></strong>?</p>
+                                            <div class="alert alert-warning mb-0" role="alert">
+                                                Data order dan pembayaran tidak ikut dihapus.
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn btn-danger" name="clear_order_items">Kosongkan Item</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End modal kosongkan item order -->
+
                         <!-- Modal delete -->
                         <div class="modal fade" id="ModalDelete<?php echo $row['id_order'] ?>" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
                             <div class="modal-dialog modal-xl modal-fullscreen-md-down">

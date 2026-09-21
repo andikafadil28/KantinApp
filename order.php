@@ -63,7 +63,7 @@ while ($record2 = mysqli_fetch_array($query2)) {
                                              LEFT JOIN user ON user.id = tb_order.kasir
                                              LEFT JOIN tb_list_order ON tb_list_order.kode_order = tb_order.id_order
                                              LEFT JOIN tb_menu ON tb_menu.id = tb_list_order.menu
-                                             LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_list_order.kode_order
+                                             LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_order.id_order
                                              GROUP BY tb_order.id_order ORDER BY tb_order.waktu_order DESC
                                              LIMIT 250";
                 } else if (isset($_POST['filter']) && isset($_POST['kios_filter'])) {
@@ -73,7 +73,7 @@ while ($record2 = mysqli_fetch_array($query2)) {
                                              LEFT JOIN user ON user.id = tb_order.kasir
                                              LEFT JOIN tb_list_order ON tb_list_order.kode_order = tb_order.id_order
                                              LEFT JOIN tb_menu ON tb_menu.id = tb_list_order.menu
-                                             LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_list_order.kode_order
+                                             LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_order.id_order
                                              WHERE tb_order.nama_kios = '$kios_filter'
                                              GROUP BY tb_order.id_order ORDER BY tb_order.waktu_order DESC
                                              LIMIT 250";
@@ -83,7 +83,7 @@ while ($record2 = mysqli_fetch_array($query2)) {
                                              LEFT JOIN user ON user.id = tb_order.kasir
                                              LEFT JOIN tb_list_order ON tb_list_order.kode_order = tb_order.id_order
                                              LEFT JOIN tb_menu ON tb_menu.id = tb_list_order.menu
-                                             LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_list_order.kode_order
+                                             LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_order.id_order
                                              WHERE tb_order.nama_kios = '$kios_filter'
                                              GROUP BY tb_order.id_order ORDER BY tb_order.waktu_order DESC
                                              LIMIT 250";
@@ -94,7 +94,7 @@ while ($record2 = mysqli_fetch_array($query2)) {
                                              LEFT JOIN user ON user.id = tb_order.kasir
                                              LEFT JOIN tb_list_order ON tb_list_order.kode_order = tb_order.id_order
                                              LEFT JOIN tb_menu ON tb_menu.id = tb_list_order.menu
-                                             LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_list_order.kode_order
+                                             LEFT JOIN tb_bayar ON tb_bayar.id_bayar = tb_order.id_order
                                              GROUP BY tb_order.id_order ORDER BY tb_order.waktu_order DESC
                                              LIMIT 250";
                 }
@@ -178,6 +178,10 @@ while ($record2 = mysqli_fetch_array($query2)) {
                                                     <button class="btn btn-warning btn-sm me-2" data-bs-toggle="modal"
                                                         data-bs-target="#ModalEdit<?php echo $row['id_order'] ?>"> <i
                                                             class="bi bi-pencil-fill"></i></button>
+                                                    <button class="btn btn-outline-danger btn-sm me-2" data-bs-toggle="modal"
+                                                        data-bs-target="#ModalClearItems<?php echo $row['id_order'] ?>"
+                                                        title="Kosongkan item order"> <i
+                                                            class="bi bi-eraser-fill"></i></button>
                                                     <button class="btn btn-danger btn-sm me-2" data-bs-toggle="modal"
                                                         data-bs-target="#ModalDelete<?php echo $row['id_order'] ?>"> <i
                                                             class="bi bi-trash-fill"></i></button>
@@ -192,6 +196,12 @@ while ($record2 = mysqli_fetch_array($query2)) {
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#ModalEdit<?php echo $row['id_order'] ?>"> <i
                                                             class="bi bi-pencil-fill"></i></button>
+                                                    <button
+                                                        class="<?php echo (!empty($row['id_bayar'])) ? "btn btn-secondary btn-sm me-2 disabled" : "btn btn-outline-danger btn-sm me-2"; ?> "
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#ModalClearItems<?php echo $row['id_order'] ?>"
+                                                        title="Kosongkan item order"> <i
+                                                            class="bi bi-eraser-fill"></i></button>
                                                     <button
                                                         class="<?php echo (!empty($row['id_bayar'])) ? "btn btn-secondary btn-sm me-2 disabled" : "btn btn-danger btn-sm me-2"; ?> "
                                                         data-bs-toggle="modal"
