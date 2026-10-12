@@ -36,7 +36,13 @@ while ($record = mysqli_fetch_array($query)) {
                 <?php
                 if ($_SESSION["level_kantin"] == 1) {
                     ?>
-                    <div class="col d-flex justify-content-end gap-2 mb-3">
+                    <div class="col d-flex justify-content-end align-items-center gap-2 mb-3">
+                        <form id="bulkDeleteForm" method="post" action="validate/validate_menu_bulk_delete.php"
+                            onsubmit="return confirm('Hapus semua menu yang dicentang? Tindakan ini tidak bisa dibatalkan.')">
+                            <button type="submit" class="btn btn-outline-danger" id="btnBulkDelete" disabled>
+                                <i class="bi bi-trash"></i> Hapus Terpilih (<span id="bulkDeleteCount">0</span>)
+                            </button>
+                        </form>
                         <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#ModalImport">
                             <i class="bi bi-upload"></i> Import CSV/Excel</button>
                         <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#ModalBulkTambah">
@@ -682,6 +688,15 @@ while ($record = mysqli_fetch_array($query)) {
                         <table class="table table-hover" id="table_menu">
                             <thead>
                                 <tr>
+                                    <?php
+                                    if ($_SESSION["level_kantin"] == 1) {
+                                        ?>
+                                        <th scope="col"><input class="form-check-input" type="checkbox"
+                                                id="checkAllMenu" aria-label="Pilih semua"></th>
+                                        <?php
+                                    } else {
+                                    }
+                                    ?>
                                     <th scope="col">No</th>
                                     <th scope="col">Foto Menu</th>
                                     <th scope="col">Nama</th>
@@ -707,6 +722,15 @@ while ($record = mysqli_fetch_array($query)) {
                                 foreach ($result as $row) {
                                     ?>
                                     <tr>
+                                        <?php
+                                        if ($_SESSION["level_kantin"] == 1) {
+                                            ?>
+                                            <td><input class="form-check-input menu-check" type="checkbox" name="ids[]"
+                                                    value="<?php echo $row['id'] ?>" form="bulkDeleteForm"></td>
+                                            <?php
+                                        } else {
+                                        }
+                                        ?>
                                         <th scope="row"><?php echo $id_nomor++ ?></th>
                                         <td>
                                             <div style="width: 100px;">
@@ -808,6 +832,42 @@ while ($record = mysqli_fetch_array($query)) {
 
 <script>
     let table = new DataTable('#table_menu');
+</script>
+
+<script>
+    (() => {
+        const form = document.getElementById('bulkDeleteForm');
+        if (!form) return;
+
+        const btn = document.getElementById('btnBulkDelete');
+        const countEl = document.getElementById('bulkDeleteCount');
+        const checkAll = document.getElementById('checkAllMenu');
+        const boxes = () => Array.from(document.querySelectorAll('.menu-check'));
+
+        const refresh = () => {
+            const all = boxes();
+            const checked = all.filter((c) => c.checked).length;
+            if (countEl) countEl.textContent = checked;
+            if (btn) btn.disabled = checked === 0;
+            if (checkAll) {
+                checkAll.checked = all.length > 0 && checked === all.length;
+                checkAll.indeterminate = checked > 0 && checked < all.length;
+            }
+        };
+
+        document.addEventListener('change', (e) => {
+            if (e.target.classList.contains('menu-check')) refresh();
+        });
+
+        if (checkAll) {
+            checkAll.addEventListener('change', () => {
+                boxes().forEach((c) => { c.checked = checkAll.checked; });
+                refresh();
+            });
+        }
+
+        refresh();
+    })()
 </script>
 
 <script>

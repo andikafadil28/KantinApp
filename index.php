@@ -6,6 +6,14 @@ if (isset($_GET['x']) && $_GET['x'] == 'home') {
 } elseif (isset($_GET['x']) && $_GET['x'] == 'menu') {
     $page = 'menu.php';
     include "main.php";
+} elseif (isset($_GET['x']) && $_GET['x'] == 'menuduplikat') {
+    if ($_SESSION["level_kantin"] == 1) {
+        $page = 'menuduplikat.php';
+        include "main.php";
+    } else {
+        $page = "home.php";
+        include "main.php";
+    }
 } elseif (isset($_GET['x']) && $_GET['x'] == 'order') {
     $page = 'order.php';
     include "main.php";

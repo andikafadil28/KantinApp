@@ -54,6 +54,7 @@ if (!$insert_stmt) {
 $inserted = 0;
 $skipped = 0;
 $errors = [];
+$duplicates = [];
 
 foreach ($nama_list as $i => $nama_raw) {
     $nama = trim((string) $nama_raw);
@@ -76,14 +77,23 @@ foreach ($nama_list as $i => $nama_raw) {
         continue;
     }
 
+    $harga_val = (float) $harga;
+    $pajak_val = (float) $pajak;
+
     $key = dedup_key($nama, $kios);
     if (isset($existing[$key])) {
         $skipped++;
+        $duplicates[] = [
+            'nama' => $nama,
+            'keterangan' => $keterangan,
+            'kategori' => $kategori,
+            'kios' => $kios,
+            'harga' => $harga_val,
+            'pajak' => $pajak_val,
+            'status' => $status,
+        ];
         continue;
     }
-
-    $harga_val = (float) $harga;
-    $pajak_val = (float) $pajak;
 
     mysqli_stmt_bind_param(
         $insert_stmt,
@@ -107,10 +117,20 @@ foreach ($nama_list as $i => $nama_raw) {
 
 mysqli_stmt_close($insert_stmt);
 
-$msg = "$inserted menu ditambahkan.";
-if ($skipped > 0) {
-    $msg .= " $skipped dilewati (nama sudah ada).";
+// Duplikat dikirim ke halaman konfirmasi, bukan langsung dibuang.
+if (!empty($duplicates)) {
+    $_SESSION['menu_pending_duplicates'] = $duplicates;
+    $_SESSION['menu_pending_summary'] = [
+        'inserted' => $inserted,
+        'skipped' => $skipped,
+        'errors' => $errors,
+        'source' => 'bulk',
+    ];
+    echo "<script>window.location.href='../menuduplikat';</script>";
+    exit();
 }
+
+$msg = "$inserted menu ditambahkan.";
 if (count($errors) > 0) {
     $preview = implode(', ', array_slice($errors, 0, 5));
     if (count($errors) > 5) {
