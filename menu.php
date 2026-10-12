@@ -36,7 +36,11 @@ while ($record = mysqli_fetch_array($query)) {
                 <?php
                 if ($_SESSION["level_kantin"] == 1) {
                     ?>
-                    <div class="col d-flex justify-content-end mb-3">
+                    <div class="col d-flex justify-content-end gap-2 mb-3">
+                        <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#ModalImport">
+                            <i class="bi bi-upload"></i> Import CSV/Excel</button>
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#ModalBulkTambah">
+                            <i class="bi bi-list-plus"></i> Tambah Banyak</button>
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ModalTambah">Tambah
                             Menu</button>
                     </div>
@@ -193,6 +197,175 @@ while ($record = mysqli_fetch_array($query)) {
                         </div>
                     </div>
                 </div>
+
+                <!-- Modal bulk tambah menu -->
+                <?php
+                if ($_SESSION["level_kantin"] == 1) {
+                    ?>
+                    <div class="modal fade" id="ModalBulkTambah" data-bs-backdrop="static" data-bs-keyboard="false"
+                        tabindex="-1" aria-labelledby="ModalBulkTambahLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-fullscreen">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h1 class="modal-title fs-5" id="ModalBulkTambahLabel">Tambah Banyak Menu</h1>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form class="needs-validation" novalidate action="validate/validate_menu_bulk.php"
+                                        method="post" id="formBulkMenu">
+                                        <div class="row g-2 align-items-end mb-2">
+                                            <div class="col-12 col-md">
+                                                <small class="text-muted d-block">Menu duplikat otomatis dilewati. Baris
+                                                    tanpa nama diabaikan. Foto diisi belakangan lewat Edit.</small>
+                                            </div>
+                                            <div class="col-12 col-md-auto">
+                                                <label for="bulkKiosGlobal" class="form-label mb-1 small">Isi kios untuk
+                                                    semua baris <span class="text-muted">(opsional)</span></label>
+                                                <div class="d-flex gap-2">
+                                                    <select class="form-select form-select-sm" id="bulkKiosGlobal">
+                                                        <option value="" selected hidden>Pilih Kios</option>
+                                                        <?php
+                                                        foreach ($result2 as $row2) {
+                                                            ?>
+                                                            <option value="<?php echo $row2['nama'] ?>">
+                                                                <?php echo $row2['nama'] ?></option>
+                                                            <?php
+                                                        }
+                                                        ?>
+                                                    </select>
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-outline-primary text-nowrap"
+                                                        id="btnTambahBaris"><i class="bi bi-plus-lg"></i> Tambah
+                                                        Baris</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm align-middle" id="tableBulkMenu">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="min-width:170px;">Nama <span
+                                                                class="text-danger">*</span></th>
+                                                        <th style="min-width:170px;">Keterangan</th>
+                                                        <th style="min-width:150px;">Kategori <span
+                                                                class="text-danger">*</span></th>
+                                                        <th style="min-width:110px;">Harga <span
+                                                                class="text-danger">*</span></th>
+                                                        <th style="min-width:110px;">Margin <span
+                                                                class="text-danger">*</span></th>
+                                                        <th style="min-width:150px;">Kios <span
+                                                                class="text-danger">*</span></th>
+                                                        <th style="min-width:120px;">Status</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="bulkMenuBody"></tbody>
+                                            </table>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary"
+                                                name="input_menu_bulk_proses">Simpan Semua</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <template id="bulkRowTemplate">
+                        <tr>
+                            <td><input type="text" class="form-control form-control-sm" name="nama_menu[]"></td>
+                            <td><input type="text" class="form-control form-control-sm" name="keterangan[]"></td>
+                            <td>
+                                <select class="form-select form-select-sm" name="kategori_menu[]">
+                                    <option value="" selected hidden>Pilih</option>
+                                    <?php
+                                    foreach ($sel_kategori as $row2) {
+                                        ?>
+                                        <option value="<?php echo $row2['id_kategori'] ?>">
+                                            <?php echo $row2['kategori_menu'] ?></option>
+                                        <?php
+                                    }
+                                    ?>
+                                </select>
+                            </td>
+                            <td><input type="number" min="0" class="form-control form-control-sm" name="harga[]"></td>
+                            <td><input type="number" min="0" class="form-control form-control-sm" name="pajak[]"></td>
+                            <td>
+                                <select class="form-select form-select-sm" name="kios[]">
+                                    <option value="" selected hidden>Pilih</option>
+                                    <?php
+                                    foreach ($result2 as $row2) {
+                                        ?>
+                                        <option value="<?php echo $row2['nama'] ?>"><?php echo $row2['nama'] ?></option>
+                                        <?php
+                                    }
+                                    ?>
+                                </select>
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm" name="status_aktif[]">
+                                    <option value="1" selected>Aktif</option>
+                                    <option value="0">Nonaktif</option>
+                                </select>
+                            </td>
+                            <td><button type="button" class="btn btn-sm btn-danger btn-hapus-baris"><i
+                                        class="bi bi-x-lg"></i></button></td>
+                        </tr>
+                    </template>
+
+                    <!-- Modal import CSV/Excel -->
+                    <div class="modal fade" id="ModalImport" data-bs-backdrop="static" data-bs-keyboard="false"
+                        tabindex="-1" aria-labelledby="ModalImportLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-fullscreen-md-down">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h1 class="modal-title fs-5" id="ModalImportLabel">Import Menu (CSV / Excel)</h1>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="validate/validate_menu_import.php" method="post"
+                                        enctype="multipart/form-data">
+                                        <div class="mb-3">
+                                            <label class="form-label">File CSV / XLSX / XLS</label>
+                                            <input type="file" class="form-control" name="file_import"
+                                                accept=".csv,.xlsx,.xls" required>
+                                        </div>
+                                        <div class="alert alert-info">
+                                            <p class="mb-1"><strong>Format kolom (baris pertama = header):</strong></p>
+                                            <code>nama, keterangan, kategori, harga, margin, kios, status</code>
+                                            <ul class="mb-0 mt-2 small">
+                                                <li>Kolom dicocokkan dari nama header, urutan bebas.</li>
+                                                <li><code>kategori</code>: nama kategori atau id-nya.</li>
+                                                <li><code>kios</code>: harus sama dengan nama kios yang terdaftar.</li>
+                                                <li><code>status</code>: aktif/nonaktif (default aktif).</li>
+                                                <li>Menu yang namanya sudah ada akan dilewati.</li>
+                                                <li>Foto tidak ikut ter-import, isi lewat Edit.</li>
+                                            </ul>
+                                            <a href="menu_import_template.php"
+                                                class="btn btn-sm btn-outline-secondary mt-2">Download Template
+                                                CSV</a>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary"
+                                                name="input_menu_import_proses">Import</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php
+                } else {
+                }
+                ?>
+
                 <?php
 
                 foreach ($result as $row) {
@@ -635,6 +808,51 @@ while ($record = mysqli_fetch_array($query)) {
 
 <script>
     let table = new DataTable('#table_menu');
+</script>
+
+<script>
+    (() => {
+        const body = document.getElementById('bulkMenuBody');
+        const tpl = document.getElementById('bulkRowTemplate');
+        const btnAdd = document.getElementById('btnTambahBaris');
+        const modal = document.getElementById('ModalBulkTambah');
+        const globalKios = document.getElementById('bulkKiosGlobal');
+        if (!body || !tpl || !btnAdd || !modal) return;
+
+        const setRowKios = (row, value) => {
+            const sel = row.querySelector('select[name="kios[]"]');
+            if (sel && value) sel.value = value;
+        };
+
+        const addRow = () => {
+            body.appendChild(tpl.content.cloneNode(true));
+            if (globalKios && globalKios.value) setRowKios(body.lastElementChild, globalKios.value);
+        };
+
+        const ensureOne = () => {
+            if (body.children.length === 0) addRow();
+        };
+
+        btnAdd.addEventListener('click', addRow);
+
+        if (globalKios) {
+            globalKios.addEventListener('change', () => {
+                if (!globalKios.value) return;
+                body.querySelectorAll('select[name="kios[]"]').forEach((sel) => {
+                    sel.value = globalKios.value;
+                });
+            });
+        }
+
+        body.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-hapus-baris');
+            if (!btn) return;
+            btn.closest('tr').remove();
+            ensureOne();
+        });
+
+        modal.addEventListener('shown.bs.modal', ensureOne);
+    })()
 </script>
 
 <style>

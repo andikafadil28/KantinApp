@@ -47,9 +47,9 @@ if (isset($_POST['input_menu_proses'])) {
         exit();
     }
 
-    $select_query = mysqli_query($conn, "SELECT * FROM tb_menu WHERE nama = '$nama_menu'");
+    $select_query = mysqli_query($conn, "SELECT * FROM tb_menu WHERE nama = '$nama_menu' AND nama_toko = '$kios'");
     if (mysqli_num_rows($select_query) > 0) {
-        echo "<script>alert('Menu sudah terdaftar'); window.location.href='../menu';</script>";
+        echo "<script>alert('Menu sudah terdaftar di kios tersebut'); window.location.href='../menu';</script>";
         exit();
     }
 
